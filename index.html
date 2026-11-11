@@ -8,39 +8,41 @@
 :root{--green:#0b3d2e;--green-d:#072a20;--red:#b3262d;--gold:#e8c36a;--cream:#fff8ea;--ink:#2a1a14}
 *{box-sizing:border-box}
 html,body{margin:0}
+html{background:var(--green-d)}
 body{font-family:Georgia,'Times New Roman',serif;color:var(--cream);min-height:100vh;
   background:radial-gradient(circle at 50% -10%,#14634a 0,var(--green) 45%,var(--green-d) 100%) fixed}
 header{text-align:center;padding:34px 16px 22px;position:relative}
 header::before{content:"";display:block;height:14px;margin:-34px -16px 24px;
-  background:radial-gradient(circle,var(--red) 0 5px,transparent 6px) 0 0/44px 14px,
-             radial-gradient(circle,var(--gold) 0 5px,transparent 6px) 22px 0/44px 14px}
+  background:repeating-linear-gradient(135deg,var(--red) 0 14px,var(--gold) 14px 28px)}
 h1{margin:0;font-size:clamp(1.8rem,5vw,3rem);color:var(--gold);letter-spacing:.5px;text-shadow:0 2px 0 rgba(0,0,0,.35)}
 .sub{margin:8px 0 0;opacity:.85;font-style:italic}
 main{max-width:1100px;margin:0 auto;padding:0 16px 40px;position:relative;z-index:1}
 .days{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:22px;align-items:start}
-.day{background:rgba(0,0,0,.22);border:2px solid rgba(232,195,106,.45);border-radius:20px;padding:16px 14px 14px}
+.day{background:rgba(0,0,0,.22);border:2px solid rgba(232,195,106,.45);border-radius:0;padding:16px 10px 14px;box-shadow:inset 0 0 0 4px rgba(0,0,0,.18)}
 .day h2{margin:-30px auto 14px;width:max-content;max-width:90%;background:var(--red);color:var(--gold);
-  padding:6px 26px;border-radius:999px;border:2px solid var(--gold);font-size:1.25rem;box-shadow:0 3px 8px rgba(0,0,0,.4)}
-.slot{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--cream);color:var(--ink);
-  border-radius:14px;padding:11px 14px;margin-top:10px;border-left:9px solid var(--c,#999);box-shadow:0 2px 6px rgba(0,0,0,.3)}
-.time{font-weight:700;color:#7a1c20;min-width:108px}
-.chip{background:var(--c,#ccc);padding:5px 13px;border-radius:999px;font-weight:700;color:#1d1d1d;border:1px solid rgba(0,0,0,.15)}
+  padding:6px 28px;border-radius:0;border:2px solid var(--gold);font-size:1.25rem;box-shadow:0 3px 8px rgba(0,0,0,.4)}
+.slot{display:flex;align-items:center;gap:10px;background:var(--cream);color:var(--ink);
+  border-radius:2px;padding:11px 12px;margin-top:10px;border-left:9px solid var(--c,#999);box-shadow:0 2px 6px rgba(0,0,0,.3)}
+.time{flex:1;min-width:0;white-space:nowrap;font-weight:700;color:#7a1c20}
+.chip,.open-label{flex:0 0 9rem;text-align:center;font-size:.92rem;padding:6px 8px;border-radius:2px}
+.chip{background:var(--c,#ccc);font-weight:700;color:#1d1d1d;border:1px solid rgba(0,0,0,.2)}
 .slot.open{background:transparent;color:var(--cream);border:2px dashed rgba(232,195,106,.6);border-left-width:9px;box-shadow:none}
 .slot.open .time{color:var(--gold)}
 h3{text-align:center;color:var(--gold);font-size:1.5rem;margin:44px 0 16px}
 .groups{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
-.g{background:rgba(255,248,234,.1);border:1px solid rgba(232,195,106,.35);border-radius:14px;padding:12px 14px}
-.g b{display:inline-block;background:var(--c);color:#1d1d1d;padding:3px 12px;border-radius:999px;margin-bottom:6px}
+.g{background:rgba(255,248,234,.1);border:1px solid rgba(232,195,106,.35);border-radius:2px;padding:12px 14px}
+.g b{display:inline-block;background:var(--c);color:#1d1d1d;padding:3px 12px;border-radius:2px;margin-bottom:6px}
 .g p{margin:0;font-size:.95rem;opacity:.92}
 footer{text-align:center;padding:0 16px 28px;font-size:.85rem;opacity:.7}
 .flake{position:fixed;top:-30px;color:#fff;pointer-events:none;z-index:0;animation:fall linear infinite}
 @keyframes fall{to{transform:translateY(110vh) rotate(360deg)}}
+@media (max-width:420px){.slot{padding:10px 8px;gap:6px}.time{font-size:.92rem}.chip,.open-label{flex-basis:8.2rem;font-size:.85rem;padding:6px 4px}}
 @media (prefers-reduced-motion:reduce){.flake{display:none}}
 </style>
 </head>
 <body>
 <header>
-  <h1>🎄 Weihnachtsmarkt – Verkaufsplan 🎄</h1>
+  <h1>Weihnachtsmarkt – Verkaufsplan</h1>
   <p class="sub"></p>
 </header>
 <main>
@@ -60,13 +62,13 @@ const CONFIG = { API_URL: 'https://script.google.com/macros/s/AKfycbzQpur3sFN4ow
 // plan: Liste von { tag, zeit, gruppe }   groups: Liste von { name, color, members }
 const FALLBACK = {
   groups: [
-    { name: 'Banana-Gruppe',    color: '#F4B183', members: 'Leonie, Anastasija, Käthe, Johanna Schautes' },
+    { name: 'Leonie-Gruppe',    color: '#F4B183', members: 'Leonie, Anastasija, Käthe, Johanna Schautes' },
     { name: 'Ananya-Gruppe',    color: '#9DC3E6', members: 'Ananya, Collin, Max Ritters und Pressi' },
     { name: 'Jan-Gruppe',       color: '#A9D18E', members: 'Jan, Julius, Leonard' },
     { name: 'Vito-Gruppe',      color: '#FFE699', members: 'Julian, Vito, Philipp' },
     { name: 'Taban-Gruppe',     color: '#C9A7E8', members: 'Taban, Neva, Marlena' },
     { name: 'Sarah-Gruppe',     color: '#F8B4C8', members: 'Sarah, Christina, Milla' },
-    { name: 'Nicolas-Gruppe',   color: '#8FD9D0', members: 'Nicolas Suhail Najim Ton Khai Mohamed' },
+    { name: 'Nicolas-Gruppe',   color: '#8FD9D0', members: 'Nico, Suhail, Najim, Ton Khai und Mohamed' },
     { name: 'Charlotte-Gruppe', color: '#D9D9D9', members: 'Christina, Charlotte H., Mathilde' },
     { name: 'Tim-Gruppe',       color: '#D6B88C', members: 'Tim Düllberg, Eva Rehaag, Mika Stehl' }
   ],
@@ -120,7 +122,7 @@ function render(data) {
         chip.style.setProperty('--c', colorOf[s.gruppe] || '#ccc');
         slot.appendChild(chip);
       } else {
-        slot.appendChild(el('span', '', 'noch offen'));
+        slot.appendChild(el('span', 'open-label', 'noch offen'));
       }
       day.appendChild(slot);
     });
@@ -145,7 +147,8 @@ async function load() {
     return;
   }
   try {
-    const res = await fetch(CONFIG.API_URL, { cache: 'no-store' });
+    const sep = CONFIG.API_URL.includes('?') ? '&' : '?';
+    const res = await fetch(CONFIG.API_URL + sep + 't=' + Date.now());
     if (!res.ok) throw new Error('HTTP ' + res.status);
     render(await res.json());
     $('status').textContent = 'Zuletzt aktualisiert: ' + new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) + ' Uhr';
