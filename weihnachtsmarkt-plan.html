@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Weihnachtsmarkt – Verkaufsplan</title>
+<style>
+:root{--green:#0b3d2e;--green-d:#072a20;--red:#b3262d;--gold:#e8c36a;--cream:#fff8ea;--ink:#2a1a14}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:Georgia,'Times New Roman',serif;color:var(--cream);min-height:100vh;
+  background:radial-gradient(circle at 50% -10%,#14634a 0,var(--green) 45%,var(--green-d) 100%) fixed}
+header{text-align:center;padding:34px 16px 22px;position:relative}
+header::before{content:"";display:block;height:14px;margin:-34px -16px 24px;
+  background:radial-gradient(circle,var(--red) 0 5px,transparent 6px) 0 0/44px 14px,
+             radial-gradient(circle,var(--gold) 0 5px,transparent 6px) 22px 0/44px 14px}
+h1{margin:0;font-size:clamp(1.8rem,5vw,3rem);color:var(--gold);letter-spacing:.5px;text-shadow:0 2px 0 rgba(0,0,0,.35)}
+.sub{margin:8px 0 0;opacity:.85;font-style:italic}
+main{max-width:1100px;margin:0 auto;padding:0 16px 40px;position:relative;z-index:1}
+.days{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:22px;align-items:start}
+.day{background:rgba(0,0,0,.22);border:2px solid rgba(232,195,106,.45);border-radius:20px;padding:16px 14px 14px}
+.day h2{margin:-30px auto 14px;width:max-content;max-width:90%;background:var(--red);color:var(--gold);
+  padding:6px 26px;border-radius:999px;border:2px solid var(--gold);font-size:1.25rem;box-shadow:0 3px 8px rgba(0,0,0,.4)}
+.slot{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--cream);color:var(--ink);
+  border-radius:14px;padding:11px 14px;margin-top:10px;border-left:9px solid var(--c,#999);box-shadow:0 2px 6px rgba(0,0,0,.3)}
+.time{font-weight:700;color:#7a1c20;min-width:108px}
+.chip{background:var(--c,#ccc);padding:5px 13px;border-radius:999px;font-weight:700;color:#1d1d1d;border:1px solid rgba(0,0,0,.15)}
+.slot.open{background:transparent;color:var(--cream);border:2px dashed rgba(232,195,106,.6);border-left-width:9px;box-shadow:none}
+.slot.open .time{color:var(--gold)}
+h3{text-align:center;color:var(--gold);font-size:1.5rem;margin:44px 0 16px}
+.groups{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+.g{background:rgba(255,248,234,.1);border:1px solid rgba(232,195,106,.35);border-radius:14px;padding:12px 14px}
+.g b{display:inline-block;background:var(--c);color:#1d1d1d;padding:3px 12px;border-radius:999px;margin-bottom:6px}
+.g p{margin:0;font-size:.95rem;opacity:.92}
+footer{text-align:center;padding:0 16px 28px;font-size:.85rem;opacity:.7}
+.flake{position:fixed;top:-30px;color:#fff;pointer-events:none;z-index:0;animation:fall linear infinite}
+@keyframes fall{to{transform:translateY(110vh) rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.flake{display:none}}
+</style>
+</head>
+<body>
+<header>
+  <h1>🎄 Weihnachtsmarkt – Verkaufsplan 🎄</h1>
+  <p class="sub"></p>
+</header>
+<main>
+  <div id="days" class="days"></div>
+  <h3>Unsere Gruppen</h3>
+  <div id="groups" class="groups"></div>
+</main>
+<footer id="status"></footer>
+
+<script>
+// ===== Einstellungen =====
+// Sobald das Apps Script steht, hier die URL der Web-App eintragen (…/exec).
+// Solange das Feld leer ist, werden die Beispieldaten unten angezeigt.
+const CONFIG = { API_URL: 'https://script.google.com/macros/s/AKfycbzQpur3sFN4owQXWTnBWaYOidJYxYVXIlNm4JD9B5oyLR8VkOlx-iIZzBbsjRwqUJZLJA/exec', REFRESH_SECONDS: 60 };
+
+// ===== Beispieldaten (gleiches Format wie später die Antwort des Apps Scripts) =====
+// plan: Liste von { tag, zeit, gruppe }   groups: Liste von { name, color, members }
+const FALLBACK = {
+  groups: [
+    { name: 'Banana-Gruppe',    color: '#F4B183', members: 'Leonie, Anastasija, Käthe, Johanna Schautes' },
+    { name: 'Ananya-Gruppe',    color: '#9DC3E6', members: 'Ananya, Collin, Max Ritters und Pressi' },
+    { name: 'Jan-Gruppe',       color: '#A9D18E', members: 'Jan, Julius, Leonard' },
+    { name: 'Vito-Gruppe',      color: '#FFE699', members: 'Julian, Vito, Philipp' },
+    { name: 'Taban-Gruppe',     color: '#C9A7E8', members: 'Taban, Neva, Marlena' },
+    { name: 'Sarah-Gruppe',     color: '#F8B4C8', members: 'Sarah, Christina, Milla' },
+    { name: 'Nicolas-Gruppe',   color: '#8FD9D0', members: 'Nicolas Suhail Najim Ton Khai Mohamed' },
+    { name: 'Charlotte-Gruppe', color: '#D9D9D9', members: 'Christina, Charlotte H., Mathilde' },
+    { name: 'Tim-Gruppe',       color: '#D6B88C', members: 'Tim Düllberg, Eva Rehaag, Mika Stehl' }
+  ],
+  plan: [
+    { tag: 'Freitag',  zeit: '16–18 Uhr',     gruppe: 'Jan-Gruppe' },
+    { tag: 'Freitag',  zeit: '18–20 Uhr',     gruppe: 'Charlotte-Gruppe' },
+    { tag: 'Freitag',  zeit: '20–22 Uhr',     gruppe: 'Taban-Gruppe' },
+    { tag: 'Samstag',  zeit: '11–13:15 Uhr',  gruppe: 'Leonie-Gruppe' },
+    { tag: 'Samstag',  zeit: '13:15–15:30 Uhr', gruppe: 'Leonie-Gruppe' },
+    { tag: 'Samstag',  zeit: '15:30–17:45 Uhr', gruppe: 'Vito-Gruppe' },
+    { tag: 'Samstag',  zeit: '17:45–20 Uhr',  gruppe: 'Sarah-Gruppe' },
+    { tag: 'Samstag',  zeit: '20–22 Uhr',     gruppe: 'Leonie-Gruppe' },
+    { tag: 'Sonntag',  zeit: '11–13 Uhr',     gruppe: 'Nicolas-Gruppe' },
+    { tag: 'Sonntag',  zeit: '13–15 Uhr',     gruppe: 'Tim-Gruppe' },
+    { tag: 'Sonntag',  zeit: '15–17 Uhr',     gruppe: 'Ananya-Gruppe' },
+    { tag: 'Sonntag',  zeit: '17–19 Uhr',     gruppe: 'Jan-Gruppe' }
+  ]
+};
+
+// ===== Darstellung =====
+const $ = id => document.getElementById(id);
+function el(tag, cls, text) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+
+function render(data) {
+  const colorOf = {};
+  (data.groups || []).forEach(g => { colorOf[g.name] = g.color; });
+
+  const days = [];
+  const byDay = {};
+  (data.plan || []).forEach(s => {
+    if (!byDay[s.tag]) { byDay[s.tag] = []; days.push(s.tag); }
+    byDay[s.tag].push(s);
+  });
+
+  const daysEl = $('days');
+  daysEl.replaceChildren();
+  days.forEach(tag => {
+    const day = el('section', 'day');
+    day.appendChild(el('h2', '', tag));
+    byDay[tag].forEach(s => {
+      const slot = el('div', 'slot' + (s.gruppe ? '' : ' open'));
+      slot.style.setProperty('--c', colorOf[s.gruppe] || '#999');
+      slot.appendChild(el('span', 'time', s.zeit));
+      if (s.gruppe) {
+        const chip = el('span', 'chip', s.gruppe);
+        chip.style.setProperty('--c', colorOf[s.gruppe] || '#ccc');
+        slot.appendChild(chip);
+      } else {
+        slot.appendChild(el('span', '', 'noch offen'));
+      }
+      day.appendChild(slot);
+    });
+    daysEl.appendChild(day);
+  });
+
+  const gEl = $('groups');
+  gEl.replaceChildren();
+  (data.groups || []).forEach(g => {
+    const card = el('div', 'g');
+    card.style.setProperty('--c', g.color || '#ccc');
+    card.appendChild(el('b', '', g.name));
+    card.appendChild(el('p', '', g.members || ''));
+    gEl.appendChild(card);
+  });
+}
+
+async function load() {
+  if (!CONFIG.API_URL) {
+    render(FALLBACK);
+    $('status').textContent = 'Beispieldaten – noch nicht mit der Tabelle verbunden.';
+    return;
+  }
+  try {
+    const res = await fetch(CONFIG.API_URL, { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    render(await res.json());
+    $('status').textContent = 'Zuletzt aktualisiert: ' + new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) + ' Uhr';
+  } catch (err) {
+    console.error(err);
+    $('status').textContent = 'Aktualisierung gerade nicht möglich – es wird der letzte Stand gezeigt.';
+  }
+}
+
+// ===== Schneeflocken =====
+if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  for (let i = 0; i < 36; i++) {
+    const f = el('span', 'flake', '❄');
+    f.style.left = Math.random() * 100 + 'vw';
+    f.style.fontSize = (10 + Math.random() * 16) + 'px';
+    f.style.opacity = 0.35 + Math.random() * 0.5;
+    f.style.animationDuration = (8 + Math.random() * 12) + 's';
+    f.style.animationDelay = (-Math.random() * 20) + 's';
+    document.body.appendChild(f);
+  }
+}
+
+load();
+if (CONFIG.API_URL) setInterval(load, CONFIG.REFRESH_SECONDS * 1000);
+</script>
+</body>
+</html>
